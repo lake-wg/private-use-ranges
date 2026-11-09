@@ -1,0 +1,358 @@
+
+
+
+
+LAKE Working Group                                             M. Tiloca
+Internet-Draft                                                   RISE AB
+Intended status: Informational                                 T. Müller
+Expires: 13 May 2027                                   Robert Bosch GmbH
+                                                         9 November 2026
+
+
+Additional Private Use Ranges in the IANA Registries of the Lightweight
+               Authenticated Key Exchange (LAKE) Protocol
+               draft-ietf-lake-private-use-ranges-latest
+
+Abstract
+
+   This document adds Private Use ranges to IANA registries that pertain
+   to the Lightweight Authenticated Key Exchange (LAKE) protocol.
+
+Discussion Venues
+
+   This note is to be removed before publishing as an RFC.
+
+   Discussion of this document takes place on the Lightweight
+   Authenticated Key Exchange Working Group mailing list
+   (lake@ietf.org), which is archived at
+   https://mailarchive.ietf.org/arch/browse/lake/.
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/lake-wg/private-use-ranges.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 13 May 2027.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction
+     1.1.  Terminology
+   2.  Use of Values from Private Use Ranges
+     2.1.  Range Boundaries and Encoding
+     2.2.  EAD Labels
+   3.  Security Considerations
+   4.  IANA Considerations
+     4.1.  EDHOC Method Types Registry
+     4.2.  EDHOC Error Codes Registry
+     4.3.  EDHOC External Authorization Data Registry
+   5.  References
+     5.1.  Normative References
+     5.2.  Informative References
+   Acknowledgments
+   Authors' Addresses
+
+1.  Introduction
+
+   The Lightweight Authenticated Key Exchange (LAKE) protocol [RFC9528]
+   provides points of extensibility, for which related IANA registries
+   exist.
+
+   When they were created, some of those registries did not include
+   ranges with registration procedure "Private Use" (see Section 4.1 of
+   [RFC8126]).  Later on, it was brought to attention that having such
+   ranges available would be convenient for private deployments.
+
+   Private Use ranges enable controlled proprietary ecosystems to use
+   LAKE extensibility points consistently without making their
+   application-specific protocol semantics public.  They also support
+   the development and testing of additional LAKE-based procedures
+   before a decision is made to specify them publicly.  Furthermore,
+   Private Use ranges separate locally chosen values from IANA-assigned
+   values, preserving the other ranges for publicly specified uses.
+   Deployments using Private Use values are responsible for preventing
+   collisions within their intended scope; independent deployments might
+   use the same value differently.
+
+   This document rectifies the original situation: As specified in
+   Section 4, it adds Private Use ranges to three IANA registries of the
+   LAKE protocol that originally did not include such ranges.
+
+1.1.  Terminology
+
+   This document uses the acronym LAKE, expanded to Lightweight
+   Authenticated Key Exchange, to denote the protocol specified as EDHOC
+   in [RFC9528].  Identifiers defined literally in [RFC9528] or in IANA
+   registries (e.g., the names of the EDHOC registries themselves) are
+   unchanged.
+
+2.  Use of Values from Private Use Ranges
+
+2.1.  Range Boundaries and Encoding
+
+   The Private Use ranges defined in Section 4 extend beyond the values
+   that are admitted by the existing ranges with other registration
+   policies in the same IANA registries.
+
+   The values admitted by the new Private Use ranges are bounded by the
+   values that can be encoded as CBOR integers with a four-byte argument
+   (see Section 3.1 of [RFC8949]).  For an unsigned integer N, a four-
+   byte argument makes it possible to represent values of N up to
+   4294967295.  For a negative integer N, a four-byte argument encodes
+   the absolute value of N minus 1 and thus makes it possible to
+   represent values of N down to -4294967296.
+
+   Together with the initial byte of the CBOR integer, these encodings
+   result in a total of five bytes.  These bounds preserve the existing
+   ranges for registry values that result in shorter encodings, while
+   limiting the newly defined Private Use ranges to values with five-
+   byte encodings.  In contrast, the "EDHOC Authentication Credential
+   Types" registry [Auth.Cred.Types] defined in [RFC9668] includes open-
+   ended Private Use ranges.  With respect to the Private Use ranges
+   defined in this document, no values are designated whose CBOR
+   encoding requires an eight-byte argument.
+
+   When using values from these Private Use ranges, implementations need
+   to account for the additional message size compared with the case
+   where values with shorter encodings are used.  Method types and error
+   codes in the new ranges are each encoded in five bytes.  For EAD
+   items, positive labels in the new range are each encoded in five
+   bytes as well.  When using a critical EAD item (see Section 3.8 of
+   [RFC9528]), the negative ead_label in the EAD item is encoded in five
+   bytes, except for -65536 that is encoded in three bytes (i.e., its
+   two-byte argument is 65535).
+
+   The four-byte argument does not imply that the decoded integer fits
+   in a signed 32-bit type.  In particular, neither 4294967295 nor
+   -4294967296 is representable in such a type.  Implementations
+   supporting the newly defined Private Use ranges in full also need to
+   support a representation that preserves all the values admitted by
+   those ranges, such as a signed 64-bit integer or a separate sign and
+   unsigned argument.  Range checks and, for EAD labels, absolute-value
+   calculations also need to preserve the full values of decoded
+   integers.
+
+2.2.  EAD Labels
+
+   As specified in Section 3.8 of [RFC9528], the "EDHOC External
+   Authorization Data" registry [External.Authorization.Data] records
+   the absolute values of the integer values used as ead_label in EAD
+   items.  Consistent with that, the Private Use range added to this
+   registry pertains to both positive and negative ead_label values used
+   in EAD items on the wire, with the absolute values listed in that
+   range.  The sign of ead_label retains its existing meaning: A
+   negative value indicates that the EAD item is critical, and a
+   nonnegative value indicates that the EAD item is non-critical.
+
+   For example, the ead_label values 65536 and -65536 identify the same
+   privately-defined EAD item as non-critical and critical,
+   respectively.  The processing rules for critical and non-critical EAD
+   items in Section 3.8 of [RFC9528] continue to apply.
+
+3.  Security Considerations
+
+   This document and the Private Use ranges defined in Section 4 do not
+   impact the security of the LAKE protocol.  When using values from
+   such Private Use ranges, the security considerations compiled in
+   Section 9 of [RFC9528] still apply.
+
+4.  IANA Considerations
+
+   This document has the following actions for IANA.
+
+   Note to RFC Editor: Please replace all occurrences of "[RFC-XXXX]"
+   with the RFC number of this specification and delete this paragraph.
+
+4.1.  EDHOC Method Types Registry
+
+   IANA is asked to add the following two ranges to the "EDHOC Method
+   Types" registry [Method.Types] within the "Ephemeral Diffie-Hellman
+   Over COSE (EDHOC)" registry group:
+
+   *  -4294967296 to -65537
+
+   *  65536 to 4294967295
+
+   For both ranges, the registration procedure is "Private Use" per
+   Section 4.1 of [RFC8126].
+
+   Consistent with the above, the following two entries are added to the
+   registry, thereby registering the indicated values as reserved for
+   private use:
+
+   *  Value: -4294967296 to -65537
+
+   *  Initiator Authentication Key: N/A
+
+   *  Responder Authentication Key: N/A
+
+   *  Reference: [RFC-XXXX]
+
+
+
+   *  Value: 65536 to 4294967295
+
+   *  Initiator Authentication Key: N/A
+
+   *  Responder Authentication Key: N/A
+
+   *  Reference: [RFC-XXXX]
+
+4.2.  EDHOC Error Codes Registry
+
+   IANA is asked to add the following two ranges to the "EDHOC Error
+   Codes" registry [Error.Codes] within the "Ephemeral Diffie-Hellman
+   Over COSE (EDHOC)" registry group.
+
+   *  -4294967296 to -65537
+
+   *  65536 to 4294967295
+
+   For both ranges, the registration procedure is "Private Use" per
+   Section 4.1 of [RFC8126].
+
+   Consistent with the above, the following two entries are added to the
+   registry, thereby registering the indicated values as reserved for
+   private use:
+
+   *  ERR_CODE: -4294967296 to -65537
+
+   *  ERR_INFO Type: N/A
+
+   *  Description: Reserved for Private Use
+
+   *  Change Controller: IETF
+
+   *  Reference: [RFC-XXXX]
+
+
+
+   *  ERR_CODE: 65536 to 4294967295
+
+   *  ERR_INFO Type: N/A
+
+   *  Description: Reserved for Private Use
+
+   *  Change Controller: IETF
+
+   *  Reference: [RFC-XXXX]
+
+4.3.  EDHOC External Authorization Data Registry
+
+   IANA is asked to add the following range to the "EDHOC External
+   Authorization Data" registry [External.Authorization.Data] within the
+   "Ephemeral Diffie-Hellman Over COSE (EDHOC)" registry group:
+
+   *  65536 to 4294967295
+
+   For this range, the registration procedure is "Private Use" per
+   Section 4.1 of [RFC8126].
+
+   Consistent with the above, the following entry is added to the
+   registry, thereby registering the indicated values as reserved for
+   private use:
+
+   *  Name: N/A
+
+   *  Label: 65536 to 4294967295
+
+   *  Description: Reserved for Private Use
+
+   *  Reference: [RFC-XXXX]
+
+5.  References
+
+5.1.  Normative References
+
+   [Error.Codes]
+              IANA, "EDHOC Error Codes",
+              <https://www.iana.org/assignments/edhoc/edhoc.xhtml#edhoc-
+              error-codes>.
+
+   [External.Authorization.Data]
+              IANA, "EDHOC External Authorization Data",
+              <https://www.iana.org/assignments/edhoc/edhoc.xhtml#edhoc-
+              ead>.
+
+   [Method.Types]
+              IANA, "EDHOC Method Types",
+              <https://www.iana.org/assignments/edhoc#edhoc-method-
+              types>.
+
+   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+              Writing an IANA Considerations Section in RFCs", BCP 26,
+              RFC 8126, DOI 10.17487/RFC8126, June 2017,
+              <https://www.rfc-editor.org/rfc/rfc8126>.
+
+   [RFC9528]  Selander, G., Preuß Mattsson, J., and F. Palombini,
+              "Ephemeral Diffie-Hellman Over COSE (EDHOC)", RFC 9528,
+              DOI 10.17487/RFC9528, March 2024,
+              <https://www.rfc-editor.org/rfc/rfc9528>.
+
+5.2.  Informative References
+
+   [Auth.Cred.Types]
+              IANA, "EDHOC Authentication Credential Types",
+              <https://www.iana.org/assignments/edhoc#edhoc-
+              authentication-credential-types>.
+
+   [RFC8949]  Bormann, C. and P. Hoffman, "Concise Binary Object
+              Representation (CBOR)", STD 94, RFC 8949,
+              DOI 10.17487/RFC8949, December 2020,
+              <https://www.rfc-editor.org/rfc/rfc8949>.
+
+   [RFC9668]  Palombini, F., Tiloca, M., Höglund, R., Hristozov, S., and
+              G. Selander, "Using Ephemeral Diffie-Hellman Over COSE
+              (EDHOC) with the Constrained Application Protocol (CoAP)
+              and Object Security for Constrained RESTful Environments
+              (OSCORE)", RFC 9668, DOI 10.17487/RFC9668, November 2024,
+              <https://www.rfc-editor.org/rfc/rfc9668>.
+
+Acknowledgments
+
+   The authors thank Göran Selander and Mališa Vučinić for their early
+   feedback during the preparation of this document.
+
+Authors' Addresses
+
+   Marco Tiloca
+   RISE AB
+   Isafjordsgatan 22
+   SE-164 40 Kista
+   Sweden
+   Email: marco.tiloca@ri.se
+
+
+   Tobias Müller
+   Robert Bosch GmbH
+   Markwiesenstraße 58
+   72770 Reutlingen
+   Germany
+   Email: Tobias.Mueller9@de.bosch.com
